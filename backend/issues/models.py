@@ -25,19 +25,8 @@ class Issue(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     modified_at = models.DateTimeField(auto_now=True)
 
-    def set_status(self, new_status):
-        if new_status not in Issue.STATUS_CHOICES:
-            raise ValueError(f"Invalid status: {new_status}")
-        disallowed_transitions = {
-            'OPEN': ['UNDER_REVIEW', 'DONE'],
-
-        }
-        if self.status in disallowed_transitions and new_status in disallowed_transitions[self.status]:
-            raise ValueError(f"Cannot move the status from {self.status} to {new_status}")
-
-        self.status = new_status
-        self.save()
-        return self.status
+    def __str__(self):
+        return self.summary
 
 class Comment(models.Model):
     issue = models.ForeignKey(Issue, related_name='comments', on_delete=models.CASCADE)
@@ -45,5 +34,8 @@ class Comment(models.Model):
     created_by = models.ForeignKey(User, related_name='comment_created', on_delete=models.CASCADE)
     created_at = models.DateTimeField(auto_now_add=True)
     modified_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return self.comment
 
     pass
