@@ -2,6 +2,7 @@ from django.shortcuts import render
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from rest_framework import status
+from rest_framework.permissions import IsAuthenticated
 from rest_framework.views import APIView
 
 from .models import Issue, Comment
@@ -21,6 +22,7 @@ def hello(request):
     }, status=status.HTTP_200_OK)
 
 class IssueListCreateAPIView(APIView):
+    permission_classes = [IsAuthenticated]
     def get(self, request):
         issues = Issue.objects.all()
         seralizer = IssueSerializer(issues, many=True)
@@ -30,7 +32,7 @@ class IssueListCreateAPIView(APIView):
     def post(self, request):
         serializer = IssueSerializer(data=request.data)
         if serializer.is_valid():
-            serializer.save()
+            serializer.save(created_by=request.user)
             return Response({"success":True, "data":serializer.data}, status=status.HTTP_201_CREATED)
         return Response({"success": False, "errors": serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
     
@@ -49,7 +51,7 @@ class IssueDetailUpdateDeleteAPIView(APIView):
             issue = Issue.objects.get(pk=pk)
             seralizer = IssueSerializer(issue, data=request.data, partial=True)
             if seralizer.is_valid():
-                seralizer.save()
+                seralizer.save(created_by=request.user)
                 return Response({"success": True, "data":seralizer.data})
             return Response({"success": False, "errors": seralizer.errors}, status=status.HTTP_400_BAD_REQUEST)
 
@@ -72,19 +74,19 @@ class CommentListCreateAPIView(APIView):
         return Response({"success": True, "data": serializer.data}, status=status.HTTP_200_OK)
     
     def post(self, request):
-        issue_id = request.data.get('issue')
-        if not issue_id:
-            return Response({"success": False, "errors": "Issue ID is missing"}, status=status.HTTP_400_BAD_REQUEST)
+        # issue_id = request.data.get('issue')
+        # if not issue_id:
+        #     return Response({"success": False, "errors": "Issue ID is missing"}, status=status.HTTP_400_BAD_REQUEST)
 
-        try:
-            issue = Issue.objects.get(pk=issue_id)
-        except Exception as e:
-            return Response({"success": False, "message": f"issue with given ID ({issue_id}) doesn't exist", "errors": {str(e)}}, status=status.HTTP_404_NOT_FOUND)
+        # try:
+        #     issue = Issue.objects.get(pk=issue_id)
+        # except Exception as e:
+        #     return Response({"success": False, "message": f"issue with given ID ({issue_id}) doesn't exist", "errors": {str(e)}}, status=status.HTTP_404_NOT_FOUND)
         
         serializer = CommentSerializer(data=request.data)
         if serializer.is_valid():
             # Serializers won't automatically save the related fields unless they are explicitly passed to the serializer.
-            serializer.save(issue=issue)
+            serializer.save(created_by=request.user) # issue=issue, 
             return Response({"success": True, "data": serializer.data}, status=status.HTTP_201_CREATED)
     
         return Response({"success": False, "errors": serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
