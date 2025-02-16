@@ -8,10 +8,11 @@ class CommentSerializer(serializers.ModelSerializer):
         read_only_fields = ['created_at', 'modified_at']
 
 class IssueSerializer(serializers.ModelSerializer):
+    comments = CommentSerializer(many=True, read_only=True)
     class Meta:
         model = Issue
-        fields = "__all__"
-        read_only_fields = ['created_at', 'modified_at']
+        fields = ['id', 'summary', 'description', 'due_date', 'status', 'comments']
+        read_only_fields = ['id', 'created_at', 'modified_at']
     
     def validate_status(self, value):
         choices = [i[0] for i in Issue.STATUS_CHOICES]

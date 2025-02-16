@@ -36,7 +36,7 @@ class Issue(models.Model):
         return self.status
 
 class Comment(models.Model):
-    issue = models.ForeignKey(Issue, on_delete=models.CASCADE)
+    issue = models.ForeignKey(Issue, related_name='comments', on_delete=models.CASCADE)
     comment = models.TextField(null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     modified_at = models.DateTimeField(auto_now=True)
