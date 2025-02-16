@@ -64,6 +64,8 @@ class CommentAPIView(APIView):
         
     def post(self, request):
         issue_id = request.data.get('issue')
+        if not issue_id:
+            return Response({"success": False, "errors": "Issue ID is missing"}, status=status.HTTP_400_BAD_REQUEST)
 
         try:
             issue = Issue.objects.get(pk=issue_id)
