@@ -23,5 +23,14 @@ class IssueSerializer(serializers.ModelSerializer):
         choices = [i[0] for i in Issue.STATUS_CHOICES]
         if value not in choices:
             raise serializers.ValidationError("Invalid Status")
+        
+        disallowed_transitions = {
+            'OPEN': ['UNDER_REVIEW', 'DONE'],
+            'BLOCKED': ['DONE']
+        }
+
+        if self.instance.status in disallowed_transitions and value in disallowed_transitions[self.instance.status]:
+            raise serializers.ValidationError(f"Cannot move the status from {self.instance.status} to {value}")
+
         return value
 

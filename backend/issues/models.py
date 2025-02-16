@@ -9,6 +9,7 @@ class Issue(models.Model):
     STATUS_CHOICES = (
         ('OPEN', 'Open'),
         ('IN_PROGRESS', 'In Progress'),
+        ('BLOCKED', 'Blocked'),
         ('UNDER_REVIEW', 'Under Review'),
         ('DONE', 'Done'),
     )

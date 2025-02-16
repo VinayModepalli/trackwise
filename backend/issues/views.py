@@ -22,7 +22,6 @@ def hello(request):
     }, status=status.HTTP_200_OK)
 
 class IssueListCreateAPIView(APIView):
-    permission_classes = [IsAuthenticated]
     def get(self, request):
         issues = Issue.objects.all()
         seralizer = IssueSerializer(issues, many=True)
@@ -46,17 +45,19 @@ class IssueDetailUpdateDeleteAPIView(APIView):
         except:
             return Response({"success": False, "errors": "Issue with given ID not found"}, status=status.HTTP_404_NOT_FOUND)
 
-    def put(self, request, pk):
+    def patch(self, request, pk):
         try:
             issue = Issue.objects.get(pk=pk)
-            seralizer = IssueSerializer(issue, data=request.data, partial=True)
-            if seralizer.is_valid():
-                seralizer.save(created_by=request.user)
-                return Response({"success": True, "data":seralizer.data})
-            return Response({"success": False, "errors": seralizer.errors}, status=status.HTTP_400_BAD_REQUEST)
-
-        except:
+        except Issue.DoesNotExist:
             return Response({"success": False, "errors": "Issue with given ID not found"}, status=status.HTTP_404_NOT_FOUND)
+
+        seralizer = IssueSerializer(issue, data=request.data, partial=True)
+        print("YOUO: ", seralizer.error_messages)
+        if seralizer.is_valid():
+            print("errorrrr")
+            seralizer.save()
+            return Response({"success": True, "data":seralizer.data})
+        return Response({"success": False, "errors": seralizer.errors}, status=status.HTTP_400_BAD_REQUEST)
 
     def delete(self, request, pk):
         try:
@@ -102,7 +103,7 @@ class CommmentDetailUpdateDeleteAPIView(APIView):
             return Response({"success": False, "errors": "Comment with given ID not found"}, status=status.HTTP_404_NOT_FOUND)
 
         
-    def put(self, request, pk):
+    def patch(self, request, pk):
         try:
             comment = Comment.objects.get(pk=pk)
             seralizer = CommentSerializer(comment, data=request.data, partial=True)
