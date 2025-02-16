@@ -20,19 +20,11 @@ def hello(request):
         'data': {}
     }, status=status.HTTP_200_OK)
 
-class IssueAPIView(APIView):
-    def get(self, request, pk=None):
-        if pk:
-            try:
-                issue = Issue.objects.get(pk=pk)
-                seralizer = IssueSerializer(issue)
-                return Response({"success": True, "data":seralizer.data})
-            except:
-                return Response({}, status=status.HTTP_404_NOT_FOUND)
-        else:
-            issues = Issue.objects.all()
-            seralizer = IssueSerializer(issues, many=True)
-            return Response({"success": True, "data": seralizer.data})
+class IssueListCreateAPIView(APIView):
+    def get(self, request):
+        issues = Issue.objects.all()
+        seralizer = IssueSerializer(issues, many=True)
+        return Response({"success": True, "data": seralizer.data})
 
 
     def post(self, request):
@@ -42,26 +34,43 @@ class IssueAPIView(APIView):
             return Response({"success":True, "data":serializer.data}, status=status.HTTP_201_CREATED)
         return Response({"success": False, "errors": serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
     
-
-    # def put(self, request):
-    #     pass
-
-    # def delete(self, request):
-    #     pass
-
-class CommentAPIView(APIView):
-    def get(self, request, pk=None):
+class IssueDetailUpdateDeleteAPIView(APIView):
+    
+    def get(self, request, pk):
         try:
-            if pk:
-                comment = Comment.objects.get(pk=pk)
-                serializer = CommentSerializer(comment)
-                return Response({"success": True, "data": serializer.data}, status=status.HTTP_200_OK)
-            comments = Comment.objects.all()
-            serializer = CommentSerializer(comments, many=True)
-            return Response({"success": True, "data": serializer.data}, status=status.HTTP_200_OK)
-        except Exception as e:
-            return Response({"success": False, "message": "Something went wrong", "errors": {str(e)}}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+            issue = Issue.objects.get(pk=pk)
+            seralizer = IssueSerializer(issue)
+            return Response({"success": True, "data":seralizer.data})
+        except:
+            return Response({"success": False, "errors": "Issue with given ID not found"}, status=status.HTTP_404_NOT_FOUND)
+
+    def put(self, request, pk):
+        try:
+            issue = Issue.objects.get(pk=pk)
+            seralizer = IssueSerializer(issue, data=request.data, partial=True)
+            if seralizer.is_valid():
+                seralizer.save()
+                return Response({"success": True, "data":seralizer.data})
+            return Response({"success": False, "errors": seralizer.errors}, status=status.HTTP_400_BAD_REQUEST)
+
+        except:
+            return Response({"success": False, "errors": "Issue with given ID not found"}, status=status.HTTP_404_NOT_FOUND)
+
+    def delete(self, request, pk):
+        try:
+            issue = Issue.objects.get(pk=pk)
+            issue.delete()
+            return Response({"success": True, "message": "Deleted the issue successfully!"}, status=status.HTTP_200_OK)
         
+        except:
+            return Response({"success": False, "errors": "Issue with given ID not found"}, status=status.HTTP_404_NOT_FOUND)
+
+class CommentListCreateAPIView(APIView):
+    def get(self, request):
+        comments = Comment.objects.all()
+        serializer = CommentSerializer(comments, many=True)
+        return Response({"success": True, "data": serializer.data}, status=status.HTTP_200_OK)
+    
     def post(self, request):
         issue_id = request.data.get('issue')
         if not issue_id:
@@ -79,5 +88,40 @@ class CommentAPIView(APIView):
             return Response({"success": True, "data": serializer.data}, status=status.HTTP_201_CREATED)
     
         return Response({"success": False, "errors": serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
+    
+class CommmentDetailUpdateDeleteAPIView(APIView):
+
+    def get(self, request, pk):
+        try:
+            comment = Comment.objects.get(pk=pk)
+            serializer = CommentSerializer(comment)
+            return Response({"success": True, "data": serializer.data}, status=status.HTTP_200_OK)
+        except Exception as e:
+            return Response({"success": False, "errors": "Comment with given ID not found"}, status=status.HTTP_404_NOT_FOUND)
+
+        
+    def put(self, request, pk):
+        try:
+            comment = Comment.objects.get(pk=pk)
+            seralizer = CommentSerializer(comment, data=request.data, partial=True)
+            print("pre comment serial validation")
+            if seralizer.is_valid():
+                print("comment serial validation")
+                seralizer.save()
+                return Response({"success": True, "data":seralizer.data})
+            return Response({"success": False, "errors": seralizer.errors}, status=status.HTTP_400_BAD_REQUEST)
+
+        except:
+            return Response({"success": False, "errors": "Comment with given ID not found"}, status=status.HTTP_404_NOT_FOUND)
+
+    def delete(self, request, pk):
+        try:
+            comment = Comment.objects.get(pk=pk)
+            comment.delete()
+            return Response({"success": True, "message": "Deleted the comment successfully!"}, status=status.HTTP_200_OK)
+        
+        except:
+            return Response({"success": False, "errors": "Comment with given ID not found"}, status=status.HTTP_404_NOT_FOUND)
+
         
         
